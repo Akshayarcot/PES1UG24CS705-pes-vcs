@@ -132,8 +132,7 @@ for (int i = 1; i < strlen(dir); i++) {
     }
 }
 
-mkdir(dir, 0755);
-    int fd = open(path, O_WRONLY | O_CREAT, 0644);
+  int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 if (fd < 0) return -1;
 
 write(fd, full_data, header_len + len);
