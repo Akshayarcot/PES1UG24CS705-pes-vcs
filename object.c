@@ -122,11 +122,13 @@ object_path(id_out, path);
     char dir[PATH_MAX];
 strncpy(dir, path, PATH_MAX);
 
-// remove file name → keep directory only
-for (int i = strlen(dir) - 1; i >= 0; i--) {
+// create directories step-by-step
+for (int i = 1; i < strlen(dir); i++) {
     if (dir[i] == '/') {
         dir[i] = '\0';
-        break;
+        mkdir(dir, 0755);
+        dir[i] = '/';
+    
     }
 }
 
