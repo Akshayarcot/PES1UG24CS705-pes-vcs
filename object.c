@@ -94,9 +94,50 @@ int object_exists(const ObjectID *id) {
 //
 // Returns 0 on success, -1 on error.
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out) {
-    // TODO: Implement
-    (void)type; (void)data; (void)len; (void)id_out;
-    return -1;
+    const char *type_str;
+
+    // Convert type to string
+    if (type == OBJ_BLOB) type_str = "blob";
+    else if (type == OBJ_TREE) type_str = "tree";
+    else if (type == OBJ_COMMIT) type_str = "commit";
+    else return -1;
+
+    // Create header
+    char header[100];
+    sprintf(header, "%s %zu", type_str, len);
+
+    // Calculate header length (+1 for '\0')
+    int header_len = strlen(header) + 1;
+
+    // Allocate memory for full object
+    char *full_data = malloc(header_len + len);
+    if (!full_data) return -1;
+
+    // Combine header + data
+    memcpy(full_data, header, header_len);
+    memcpy(full_data + header_len, data, len);
+    compute_hash(full_data, header_len + len, id_out);
+    char path[PATH_MAX];
+object_path(id_out, path);
+    char dir[PATH_MAX];
+strncpy(dir, path, PATH_MAX);
+
+// remove file name → keep directory only
+for (int i = strlen(dir) - 1; i >= 0; i--) {
+    if (dir[i] == '/') {
+        dir[i] = '\0';
+        break;
+    }
+}
+
+mkdir(dir, 0755);
+    int fd = open(path, O_WRONLY | O_CREAT, 0644);
+if (fd < 0) return -1;
+
+write(fd, full_data, header_len + len);
+close(fd);
+    free(full_data);
+    return 0;
 }
 
 // Read an object from the store.
